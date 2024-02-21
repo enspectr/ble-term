@@ -4,11 +4,20 @@ import random
 from serial import Serial
 
 baud_rate = 115200 # AT+BOUD0 (default)
-max_len  = 20
-term_chr = b'#'
+max_len  = 512
+term_chr = b'$'
 term_chr_code = ord(term_chr)
 
 random.seed()
+
+FNV_prime        = 0x01000193
+FNV_offset_basis = 0x811c9dc5
+
+def fnv1a(s):
+    hash = FNV_offset_basis
+    for b in s:
+        hash = ((hash ^ b) * FNV_prime) & 0xffffffff
+    return hash
 
 def random_bytes():
 	n = random.randrange(1, max_len)
@@ -29,17 +38,18 @@ def read_resp(com, tout=1):
 			return resp
 
 def chk_resp(msg, resp):
-	if resp == msg:
-		return True
 	if not len(resp):
 		print ('\nempty response', file=sys.stderr)
-	elif len(resp) != len(msg):
-		print ('\nresponse with different length', file=sys.stderr)
-	else:
-		print ('', file=sys.stderr)
-		for i in range(len(msg)):
-			if resp[i] != msg[i]:
-				print (f'error at [{i}] tx:{msg[i]} rx:{resp[i]}', file=sys.stderr)
+		return False
+	if resp[-1] != term_chr_code:
+		print ('\ninvalid response terminator', file=sys.stderr)
+		print (f'tx:{msg} rx:{resp}', file=sys.stderr)
+		return False
+	echo_hash = (b'%x' % fnv1a(msg)) + term_chr
+	if echo_hash == resp:
+		return True
+	print ('\ninvalid response to %u bytes sent:' % len(msg), file=sys.stderr)
+	print (f'tx:{msg} rx:{resp} expect:{echo_hash}', file=sys.stderr)
 	return False
 
 with Serial(sys.argv[1], baudrate=baud_rate, timeout=.01) as com:
@@ -50,7 +60,6 @@ with Serial(sys.argv[1], baudrate=baud_rate, timeout=.01) as com:
 			if chk_resp(msg, resp):
 				print ('.', end='', flush=True)
 			else:
-				print (f'tx:{msg} rx:{resp}', file=sys.stderr)
 				break
 	except KeyboardInterrupt:
 		pass

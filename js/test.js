@@ -10,12 +10,15 @@ const rx_msg_max = parseInt(rx_msg.getAttribute('rows'));
 const query_str  = window.location.search;
 const url_param  = new URLSearchParams(query_str);
 const echo_mode  = url_param.get('echo') !== null;
+const echo_hash  = url_param.get('echo') == 'hash';
 
-const bt_svc_id     = 0xFFE0;
-const bt_char_id    = 0xFFE1;
-const max_msg_len   = 256;
-const msg_term      = '#';
-const msg_term_code = msg_term.charCodeAt(0);
+const bt_svc_id      = 0xFFE0;
+const bt_char_id     = 0xFFE1;
+const max_msg_len    = 4096;
+const echo_term      = '#';
+const echo_hash_term = '$';
+const echo_term_code      = echo_term.charCodeAt(0);
+const echo_hash_term_code = echo_hash_term.charCodeAt(0);
 
 let bt_char = null;
 let rx_msgs = [];
@@ -66,18 +69,33 @@ function writeValue(val)
 	});
 }
 
+function echoReplyHash()
+{
+	let hash = 0x811c9dc5;
+	for (let i = 0; i < echo_buf_len; ++i)
+		hash = Math.imul(hash ^ echo_buf[i], 0x01000193) >>> 0;
+	txString(hash.toString(16) + echo_hash_term);
+	echo_buf_len = 0;
+}
+
+function echoReply()
+{
+	const resp = new Uint8Array(echo_buf_len);
+	for (let i = 0; i < echo_buf_len; ++i)
+		resp[i] = echo_buf[i];
+	writeValue(resp);
+	echo_buf_len = 0;
+}
+
 function echoHandleValue(val)
 {
-	for (let i = 0; i < val.byteLength; ++i) {
+	for (let i = 0; i < val.byteLength; ++i)
 		echo_buf[echo_buf_len++] = val.getUint8(i);
-	}
-	if (echo_buf[echo_buf_len-1] == msg_term_code) {
-		const resp = new Uint8Array(echo_buf_len);
-		for (let i = 0; i < echo_buf_len; ++i)
-			resp[i] = echo_buf[i];
-		echo_buf_len = 0;
-		writeValue(resp);
-	}
+	const term = echo_buf[echo_buf_len-1];
+	if (term == echo_term_code)
+		echoReply();
+	else if (term == echo_hash_term_code)
+		echoReplyHash();
 }
 
 function onValueChanged(event) {
@@ -163,12 +181,16 @@ function onConnect(event)
 	doConnect();
 }
 
-function onTx(event)
+function txString(str)
 {
-	const str = tx_msg.value;
 	const val = Uint8Array.from(Array.from(str).map(letter => letter.charCodeAt(0)));
 	console.log('tx:', str);
 	writeValue(val);
+}
+
+function onTx(event)
+{
+	txString(tx_msg.value);
 }
 
 function onBtn(event)
