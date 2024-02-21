@@ -60,6 +60,23 @@ function onDisconnection(event)
 	connectTo(device);
 }
 
+function writeValueLong(buf, len, off)
+{
+	const mtu = 20;
+	const chunk_size = Math.min(len - off, mtu);
+	const chunk = new Uint8Array(chunk_size);
+	for (let i = 0; i < chunk_size; ++i)
+		chunk[i] = buf[off+i];
+	bt_char.writeValue(chunk)
+	.then(
+		() => { if (off + chunk_size < len) writeValueLong(buf, len, off + chunk_size); },
+		(err) => {
+			console.log('BT device chunk write failed');
+			setTimeout(() => writeValueLong(buf, len, off), 10);
+		}
+	)
+}
+
 function writeValue(val)
 {
 	bt_char.writeValue(val)
@@ -80,10 +97,7 @@ function echoReplyHash()
 
 function echoReply()
 {
-	const resp = new Uint8Array(echo_buf_len);
-	for (let i = 0; i < echo_buf_len; ++i)
-		resp[i] = echo_buf[i];
-	writeValue(resp);
+	writeValueLong(echo_buf, echo_buf_len, 0);
 	echo_buf_len = 0;
 }
 

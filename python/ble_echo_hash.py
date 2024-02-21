@@ -4,7 +4,7 @@ import random
 from serial import Serial
 
 baud_rate = 115200 # AT+BOUD0 (default)
-max_len  = 512
+max_len  = 128
 term_chr = b'$'
 term_chr_code = ord(term_chr)
 
