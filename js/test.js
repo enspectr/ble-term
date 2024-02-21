@@ -52,8 +52,9 @@ function onDisconnection(event)
 	console.log(device.name + ' bluetooth device disconnected');
 	tx_msg.disabled = true;
 	rx_msg.disabled = true;
+	bt_btn.disabled = true;
 	bt_char = null;
-	bt_btn.textContent = 'Connect';
+	connectTo(device);
 }
 
 function writeValue(val)
@@ -100,6 +101,7 @@ function onBTConnected(device, characteristic)
 	device.addEventListener('gattserverdisconnected', onDisconnection);
 	tx_msg.disabled = false;
 	rx_msg.disabled = false;
+	bt_btn.disabled = false;
 	bt_char = characteristic;
 	bt_btn.textContent = 'Send';
 }
@@ -135,6 +137,8 @@ function connectTo(device)
 
 function doConnect(devname)
 {
+	console.log('doConnect', devname);
+	bt_btn.disabled = true;
 	let filters = [{services: [bt_svc_id]}];
 	if (devname) {
 		filters.push({name: devname});
@@ -148,6 +152,8 @@ function doConnect(devname)
 	})
 	.catch((err) => {
 		console.log('Failed to discover BT devices');
+		bt_btn.textContent = 'Connect';
+		bt_btn.disabled = false;
 	});
 }
 
