@@ -37,7 +37,9 @@ with Serial(sys.argv[1], baudrate=baud_rate, timeout=.01) as com:
 				print ('.', end='', flush=True)
 			else:
 				print (f'\ntx:{msg} rx:{resp}', file=sys.stderr)
-				if len(resp) != len(msg):
+				if not len(resp):
+					print ('empty response', file=sys.stderr)
+				elif len(resp) != len(msg):
 					print ('response with different length', file=sys.stderr)
 				else:
 					for i in range(len(msg)):
