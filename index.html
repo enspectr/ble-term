@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="BLE terminal">
+    <title>BLE terminal</title>
+    <link href="css/test.css" rel="stylesheet">
+  </head>
+<body>
+  <table>
+  <tr>
+  <td><label for="tx-msg">Tx:</label></td>
+  <td><span><input type="text" id="tx-msg" name="tx-msg" size="32" disabled="true"/></span></td>
+  <td><button type="button" id="bt-btn"></button></td>
+  </tr>
+  <tr>
+  <td><label for="rx-msg">Rx:</label></td>
+  <td><textarea id="rx-msg" name="rx-msg" rows="8" cols="32" disabled="true" readonly></textarea></td>
+  </tr>
+  </table>
+  <script src="js/test.js"></script>
+</body>
+</html>
