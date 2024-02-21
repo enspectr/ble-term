@@ -42,15 +42,21 @@ def chk_resp(msg, resp):
 				print (f'error at [{i}] tx:{msg[i]} rx:{resp[i]}', file=sys.stderr)
 	return False
 
+total_bytes = 0
+start = time.time()
+
 with Serial(sys.argv[1], baudrate=baud_rate, timeout=.01) as com:
 	try:
 		while True:
 			com.write(msg := random_bytes())
 			resp = read_resp(com)
 			if chk_resp(msg, resp):
+				total_bytes += len(msg) + len(resp)
 				print ('.', end='', flush=True)
 			else:
 				print (f'tx:{msg} rx:{resp}', file=sys.stderr)
 				break
 	except KeyboardInterrupt:
+		now = time.time()
+		print('\n%u bytes transferred (%u bytes/sec)' % (total_bytes, int(total_bytes/(now-start))))
 		pass
