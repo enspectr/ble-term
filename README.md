@@ -24,3 +24,9 @@ Scripts from the *python* folder are designed to communicate with adapter
 - Chromium for Linux (set chrome://flags/#enable-experimental-web-platform-features flag)
 - Chrome for Android
 - Bluefy on iOS (https://apps.apple.com/us/app/bluefy-web-ble-browser/id1492822055)
+
+## Useful resources
+- https://github.com/WebBluetoothCG/web-bluetooth
+- https://googlechrome.github.io/samples/web-bluetooth/device-info.html
+- https://play.google.com/store/apps/details?id=no.nordicsemi.android.mcp
+- https://apps.apple.com/us/app/nrf-connect-for-mobile/id1054362403
