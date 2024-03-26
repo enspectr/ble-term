@@ -1,5 +1,5 @@
 # ble-term
-BLE terminal for modules like JDY-08
+Web BLE terminal for modules like JDY-08
 
 ## How to use
 - connect BLE module to UART adapter
