@@ -29,7 +29,7 @@ Scripts from the *python* folder are designed to communicate with adapter
 The BLE is built around GATT where data is bound to attributes which in tern are bound to services. The attribute data length is limited by radio link MTU and is just 20 bytes by default. The data stream transmission is only possible by gradually updating attribute. The BLE guarantees that unless something goes wrong every attribute update will be delivered to the peer. The BLE module (we use JDY-08) used to split UART data received onto 20 byte chunks before sending them to the peer. Yet one should not send too many chunks at once just because the UART buffer may be overflowed and data may be lost. There are no hardware handshaking supported by the module. There are two test scenarious supported by the web page. The first 'echo' test just sends any data received back to the sender. The second 'echo / hash' test sends just the hash of the received data back to the sender.
 
 ## JDY-08 pinout
-![JDY-08 module pins](https://github.com/olegv142/ble-term/blob/master/doc/pinout.png)
+![JDY-08 module pins](https://github.com/enspectr/ble-term/blob/master/doc/pinout.png)
 
 The BLE module is configured in many aspects by means of AT commands. Note that there is no line termination symbol in the protocol. AT commands should be ended by just ending transmitting of characters. So readily available tools like PuTTY will not work. One can use *ble_term.py* script to send AT commands to the module and receive responses. The module accepts AT commands unless paired with remote party.
 
