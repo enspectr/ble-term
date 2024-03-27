@@ -30,7 +30,7 @@ The BLE is built around GATT where data is bound to attributes which in tern are
 
 ## JDY-08 pinout
 
-![JDY-08 module pins](https://github.com/enspectr/ble-term/blob/master/doc/pinout.png)
+![JDY-08 module pins](https://github.com/enspectr/ble-term/blob/main/doc/pinout.png)
 
 The BLE module is configured in many aspects by means of AT commands. Note that there is no line termination symbol in the protocol. AT commands should be ended by just ending transmitting of characters. So readily available tools like PuTTY will not work. One can use *ble_term.py* script to send AT commands to the module and receive responses. The module accepts AT commands unless paired with remote party.
 
