@@ -15,9 +15,10 @@ Scripts from the *python* folder are designed to communicate with adapter
 - *ble_echo_hash.py* runs echo / hash test (see below)
 
 ## Tests
-1. Before running BLE tests check your adapter. To do it connect RX and TX pins and run *ble_echo.py*.
-2. For echo test goto https://enspectr.github.io/ble-term/?echo and connect to your adapter. Then run *ble_echo.py*.
-3. For echo / hash test goto https://enspectr.github.io/ble-term/?echo=hash and connect to your adapter. Then run *ble_echo_hash.py*.
+1. Before running BLE tests check your adapter. To do it connect RX and TX pins and run *ble_echo.py PORT*.
+2. For echo test goto https://enspectr.github.io/ble-term/?echo and connect to your adapter. Then run *ble_echo.py PORT*.
+3. For echo / hash test goto https://enspectr.github.io/ble-term/?echo=hash and connect to your adapter. Then run *ble_echo_hash.py PORT*.
+where *PORT* is the name of the port where serial adapter in connected like *COMXX* on windows or */dev/ttyUSBX* on linux
 
 ## Browsers tested
 - Chrome for Windows
