@@ -2,9 +2,10 @@
 
 (() => {
 
-const bt_btn = document.getElementById('bt-btn');
-const rx_msg = document.getElementById('rx-msg');
-const tx_msg = document.getElementById('tx-msg');
+const bt_btn  = document.getElementById('bt-btn');
+const bt_btn2 = document.getElementById('bt-btn2');
+const rx_msg  = document.getElementById('rx-msg');
+const tx_msg  = document.getElementById('tx-msg');
 
 const rx_msg_max = parseInt(rx_msg.getAttribute('rows'));
 const query_str  = window.location.search;
@@ -24,6 +25,7 @@ let bt_char = null;
 let rx_msgs = [];
 let echo_buf = new Uint8Array(max_msg_len);
 let echo_buf_len = 0;
+let bt_rx_suspended = false;
 
 function isConnected()
 {
@@ -38,6 +40,7 @@ function initPage()
 	}
 	bt_btn.textContent = 'Connect';
 	bt_btn.onclick = onBtn;
+	bt_btn2.onclick = onBtn2;
 }
 
 function showMessage(msg)
@@ -56,6 +59,7 @@ function onDisconnection(event)
 	tx_msg.disabled = true;
 	rx_msg.disabled = true;
 	bt_btn.disabled = true;
+	bt_btn2.disabled = true;
 	bt_char = null;
 	connectTo(device);
 }
@@ -123,7 +127,14 @@ function onValueChanged(event) {
 			break;
 		msg += String.fromCharCode(c);
 	}
-    showMessage(msg);
+	if (!bt_rx_suspended)
+		showMessage(msg);
+}
+
+function suspendRx(flag)
+{
+	bt_rx_suspended = flag;
+	bt_btn2.textContent = flag ? 'Resume' : 'Suspend';
 }
 
 function onBTConnected(device, characteristic)
@@ -134,8 +145,11 @@ function onBTConnected(device, characteristic)
 	tx_msg.disabled = false;
 	rx_msg.disabled = false;
 	bt_btn.disabled = false;
-	bt_char = characteristic;
 	bt_btn.textContent = 'Send';
+	bt_btn2.disabled = false;
+	bt_btn2.classList.remove('hidden');
+	suspendRx(bt_rx_suspended);
+	bt_char = characteristic;
 }
 
 function connectTo(device)
@@ -204,7 +218,7 @@ function txString(str)
 
 function onTx(event)
 {
-	txString(tx_msg.value);
+	txString(tx_msg.value + '\r');
 }
 
 function onBtn(event)
@@ -213,6 +227,11 @@ function onBtn(event)
 		onTx();
 	else
 		onConnect();
+}
+
+function onBtn2(event)
+{
+	suspendRx(!bt_rx_suspended);
 }
 
 initPage();
