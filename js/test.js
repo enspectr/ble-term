@@ -11,20 +11,14 @@ const rx_msg_max = parseInt(rx_msg.getAttribute('rows'));
 const query_str  = window.location.search;
 const url_param  = new URLSearchParams(query_str);
 const echo_mode  = url_param.get('echo') !== null;
-const echo_hash  = url_param.get('echo') == 'hash';
 
-const bt_svc_id      = 0xFFE0;
-const bt_char_id     = 0xFFE1;
-const max_msg_len    = 4096;
-const echo_term      = '#';
-const echo_hash_term = '$';
-const echo_term_code      = echo_term.charCodeAt(0);
-const echo_hash_term_code = echo_hash_term.charCodeAt(0);
+const bt_svc_id  = 0xFFE0;
+const bt_char_id = 0xFFE1;
 
 let bt_char = null;
+let bt_busy = false;
+let tx_queue = [];
 let rx_msgs = [];
-let echo_buf = new Uint8Array(max_msg_len);
-let echo_buf_len = 0;
 let bt_rx_suspended = false;
 
 function isConnected()
@@ -61,65 +55,43 @@ function onDisconnection(event)
 	bt_btn.disabled = true;
 	bt_btn2.disabled = true;
 	bt_char = null;
+	bt_busy = false;
+	tx_queue = [];
 	connectTo(device);
 }
 
-function writeValueLong(buf, len, off)
+function bt_write(val)
 {
-	const mtu = 20;
-	const chunk_size = Math.min(len - off, mtu);
-	const chunk = new Uint8Array(chunk_size);
-	for (let i = 0; i < chunk_size; ++i)
-		chunk[i] = buf[off+i];
-	bt_char.writeValue(chunk)
+	bt_char.writeValueWithoutResponse(val)
 	.then(
-		() => { if (off + chunk_size < len) writeValueLong(buf, len, off + chunk_size); },
-		(err) => {
-			console.log('BT device chunk write failed');
-			setTimeout(() => writeValueLong(buf, len, off), 10);
-		}
-	)
+		() => {tx_queue_flush();},
+		(err) => {console.log('BT write failed'); tx_queue.push(val); tx_queue_flush();}
+	);
+}
+
+function tx_queue_flush()
+{
+	let val = tx_queue.shift();
+	if (val)
+		bt_write(val);
+	else
+		bt_busy = false;
 }
 
 function writeValue(val)
 {
-	bt_char.writeValue(val)
-	.catch((err) => {
-		console.log('BT device write failed');
-		setTimeout(() => writeValue(val), 10);
-	});
-}
-
-function echoReplyHash()
-{
-	let hash = 0x811c9dc5;
-	for (let i = 0; i < echo_buf_len; ++i)
-		hash = Math.imul(hash ^ echo_buf[i], 0x01000193) >>> 0;
-	txString(hash.toString(16) + echo_hash_term);
-	echo_buf_len = 0;
-}
-
-function echoReply()
-{
-	writeValueLong(echo_buf, echo_buf_len, 0);
-	echo_buf_len = 0;
-}
-
-function echoHandleValue(val)
-{
-	for (let i = 0; i < val.byteLength; ++i)
-		echo_buf[echo_buf_len++] = val.getUint8(i);
-	const term = echo_buf[echo_buf_len-1];
-	if (term == echo_term_code)
-		echoReply();
-	else if (term == echo_hash_term_code)
-		echoReplyHash();
+	if (bt_busy) {
+		tx_queue.push(val);
+		return;
+	}
+	bt_busy = true;
+	bt_write(val);
 }
 
 function onValueChanged(event) {
 	const value = event.target.value;
 	if (echo_mode)
-		echoHandleValue(value);
+		writeValue(value);
 	let msg = '';
 	for (let i = 0; i < value.byteLength; i++) {
 		const c = value.getUint8(i);
