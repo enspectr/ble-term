@@ -11,9 +11,11 @@ const rx_msg_max = parseInt(rx_msg.getAttribute('rows'));
 const query_str  = window.location.search;
 const url_param  = new URLSearchParams(query_str);
 const echo_mode  = url_param.get('echo') !== null;
+const dual_mode  = url_param.get('dual') !== null;
 
-const bt_svc_id  = 0xFFE0;
-const bt_char_id = 0xFFE1;
+const bt_svc_id     = 0xFFE0;
+const bt_char_tx_id = 0xFFE1;
+const bt_char_rx_id = 0xFFE2;
 
 let bt_char = null;
 let bt_busy = false;
@@ -109,19 +111,18 @@ function suspendRx(flag)
 	bt_btn2.textContent = flag ? 'Resume' : 'Suspend';
 }
 
-function onBTConnected(device, characteristic)
+function onBTConnected(device, chars)
 {
 	console.log(device.name, 'connected');
-	characteristic.addEventListener('characteristicvaluechanged', onValueChanged);
+	chars[0].addEventListener('characteristicvaluechanged', onValueChanged);
 	device.addEventListener('gattserverdisconnected', onDisconnection);
-	tx_msg.disabled = false;
+	bt_char = dual_mode ? chars[1] : chars[0];
+	tx_msg.disabled = bt_btn.disabled = !bt_char.properties.write;
 	rx_msg.disabled = false;
-	bt_btn.disabled = false;
 	bt_btn.textContent = 'Send';
 	bt_btn2.disabled = false;
 	bt_btn2.classList.remove('hidden');
 	suspendRx(bt_rx_suspended);
-	bt_char = characteristic;
 }
 
 function connectTo(device)
@@ -133,13 +134,16 @@ function connectTo(device)
 	}).
 	then((service) => {
 		console.log(device.name, 'service found, getting characteristic...');
-		return service.getCharacteristic(bt_char_id);
+		return Promise.all([
+      service.getCharacteristic(bt_char_tx_id),
+      dual_mode ? service.getCharacteristic(bt_char_rx_id) : null
+    ]);
 	}).
-	then((characteristic) => {
+	then((chars) => {
 		console.log(device.name, 'characteristic found');
-		return characteristic.startNotifications().then(
+		return chars[0].startNotifications().then(
 			() => {
-				onBTConnected(device, characteristic);
+				onBTConnected(device, chars);
 	        },
 	        (err) => {
 	        	console.log('Failed to subscribe to ' + device.name + ':', err.message);
